@@ -1,0 +1,61 @@
+# GitHub Actions 自动部署工作流
+# 触发条件：推送到 main 分支时自动执行
+# 支持 AWS Amplify 和 Vercel 两种部署方式
+
+name: Auto Deploy to Amplify/Vercel
+
+# 触发条件
+on:
+  push:
+    branches:
+      - main  # 推送到 main 分支时触发
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  # 部署到 AWS Amplify
+  deploy-amplify:
+    name: Deploy to AWS Amplify
+    runs-on: ubuntu-latest
+    # 只有在设置了 AMPLIFY_APP_ID 时才执行
+    if: ${{ secrets.AMPLIFY_APP_ID != '' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+      
+      - name: Deploy to Amplify
+        run: |
+          echo "Deploying to AWS Amplify..."
+          # Amplify 会自动检测 GitHub 推送并部署
+          # 这里可以添加额外的部署命令（如果需要）
+          echo "Deployment triggered via Amplify webhook"
+
+  # 部署到 Vercel（备选方案）
+  deploy-vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    # 只有在设置了 VERCEL_TOKEN 时才执行
+    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.AMPLIFY_APP_ID == '' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+      
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'  # 部署到生产环境
+
