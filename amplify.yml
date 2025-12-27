@@ -9,8 +9,8 @@ frontend:
     build:
       commands: []
   artifacts:
-    baseDirectory: /
+    baseDirectory: .  # 明确指定根目录
     files:
-      - '**/*'
+      - '**/*'  # 包含根目录下所有文件（包括 index.html）
   cache:
     paths: []
