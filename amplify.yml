@@ -1,26 +1,16 @@
-# AWS Amplify 自动部署配置文件
-# 当代码推送到 GitHub 后，Amplify 会自动检测并部署
+# AWS Amplify Auto Deploy Configuration
+# This file is automatically used when code is pushed to GitHub
 
 version: 1
 frontend:
   phases:
     preBuild:
-      commands:
-        # 预构建阶段：可以在这里安装依赖（如果有）
-        # npm install
-        echo "Pre-build phase completed"
+      commands: []
     build:
-      commands:
-        # 构建阶段：静态网站无需构建，直接部署
-        # 如果有构建命令，在这里添加
-        # npm run build
-        echo "Build phase completed - Static site, no build needed"
+      commands: []
   artifacts:
-    # 部署的目录：根目录的所有文件
     baseDirectory: /
     files:
       - '**/*'
   cache:
-    # 缓存配置（可选）
     paths: []
-
