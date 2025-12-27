@@ -17,7 +17,7 @@ jobs:
     name: Deploy to AWS Amplify
     runs-on: ubuntu-latest
     # 只有在设置了 AMPLIFY_APP_ID 时才执行
-    if: ${{ secrets.AMPLIFY_APP_ID != '' }}
+    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.AMPLIFY_APP_ID == '' }}
     
     steps:
       - name: Checkout code
