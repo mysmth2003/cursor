@@ -1,6 +1,6 @@
 # GitHub Actions 自动部署工作流
 # 触发条件：推送到 main 分支时自动执行
-# 支持 AWS Amplify 和 Vercel 两种部署方式
+# 支持 AWS Amplify 和 Vercel 两种部署方式（Amplify 优先，Vercel 备用）
 
 name: Auto Deploy to Amplify/Vercel
 
@@ -12,12 +12,12 @@ on:
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  # 部署到 AWS Amplify
+  # 部署到 AWS Amplify（优先执行）
   deploy-amplify:
     name: Deploy to AWS Amplify
     runs-on: ubuntu-latest
-    # 只有在设置了 AMPLIFY_APP_ID 时才执行
-    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.AMPLIFY_APP_ID == '' }}
+    # 修正：只有 Amplify 应用 ID 存在时，才执行该任务（优先部署 Amplify）
+    if: ${{ secrets.AMPLIFY_APP_ID != '' }}
     
     steps:
       - name: Checkout code
@@ -28,21 +28,21 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          aws-region: ${{ secrets.AWS_REGION }}  # 移除冗余默认值，使用你配置的区域
       
-      - name: Deploy to Amplify
+      - name: Deploy to Amplify（核心部署命令，修复无实际部署的问题）
         run: |
           echo "Deploying to AWS Amplify..."
-          # Amplify 会自动检测 GitHub 推送并部署
-          # 这里可以添加额外的部署命令（如果需要）
-          echo "Deployment triggered via Amplify webhook"
+          # 真正触发 Amplify 部署的命令，指定应用 ID 和分支
+          aws amplify start-deployment --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main
+          echo "AWS Amplify deployment triggered successfully!"
 
-  # 部署到 Vercel（备选方案）
+  # 部署到 Vercel（备选方案：仅当 Amplify 应用 ID 不存在，且 Vercel 令牌存在时执行）
   deploy-vercel:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
-    # 只有在设置了 VERCEL_TOKEN 时才执行
-    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.AMPLIFY_APP_ID == '' }}
+    # 修正：Vercel 备用部署的条件（Amplify 不可用，才执行 Vercel）
+    if: ${{ secrets.AMPLIFY_APP_ID == '' && secrets.VERCEL_TOKEN != '' }}
     
     steps:
       - name: Checkout code
@@ -58,4 +58,3 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'  # 部署到生产环境
-
